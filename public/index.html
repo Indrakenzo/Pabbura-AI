@@ -18,7 +18,7 @@
             margin: 0;
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* Mencegah scrolling pada background */
+            overflow: hidden; 
             position: relative;
         }
 
@@ -38,61 +38,55 @@
         /* Wrapper Container yang bisa didrag */
         #draggable-container {
             position: absolute;
-            /* Posisi awal di kanan bawah, menyesuaikan ukuran layar */
             bottom: 20px;
             right: 20px;
             z-index: 50;
-            /* Transisi hanya aktif saat tidak didrag agar halus saat buka/tutup */
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        /* Saat sedang didrag, matikan transisi posisi agar responsif */
         #draggable-container.dragging {
             transition: none;
         }
 
-        /* Chat Window - Menyesuaikan ukuran berdasarkan perangkat */
+        /* Chat Window */
         #chat-window {
-            /* Default untuk mobile */
             width: calc(100vw - 40px);
             height: calc(100vh - 120px); 
             max-width: 400px;
             max-height: 600px;
-            /* Animasi buka tutup */
             transform-origin: bottom right;
             transform: scale(0);
             opacity: 0;
-            pointer-events: none; /* Nonaktifkan interaksi saat tertutup */
-            display: none; /* Sembunyikan sepenuhnya dari DOM agar tidak mengganggu layout */
+            pointer-events: none; 
+            display: none; 
         }
 
         #chat-window.active {
             transform: scale(1);
             opacity: 1;
             pointer-events: auto;
-            display: flex; /* Tampilkan sebagai flexbox */
+            display: flex; 
         }
 
-        /* Header Chat - Area utama untuk mendrag (handle) */
+        /* Header Chat (Area Handle Drag) */
         .chat-header {
             cursor: grab;
-            touch-action: none; /* Mencegah default touch behavior saat drag */
-            user-select: none; /* Mencegah teks terseleksi saat drag */
+            touch-action: none; 
+            user-select: none; 
         }
         
         .chat-header:active {
             cursor: grabbing;
         }
 
-        /* Area Model Selector - Pastikan bisa diklik */
+        /* Area Model Selector */
         #model-selector-area {
-            position: relative; /* Penting untuk z-index dropdown */
+            position: relative; 
             z-index: 60;
         }
 
         select#model-select {
             cursor: pointer;
-            /* Styling agar terlihat jelas */
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -103,7 +97,7 @@
             padding-right: 30px;
         }
 
-        /* Custom Scrollbar untuk Chat History */
+        /* Custom Scrollbar */
         #chat-history::-webkit-scrollbar {
             width: 6px;
         }
@@ -119,13 +113,13 @@
             background: rgba(14, 165, 233, 0.6);
         }
 
-        /* Floating Chibi Robot Button (Trigger Utama) */
+        /* Floating Chibi Robot Button */
         .chibi-robot-btn {
             width: 64px;
             height: 64px;
             background: white;
             border-radius: 50%;
-            border: 4px solid #7dd3fc; /* sky-300 */
+            border: 4px solid #7dd3fc; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
@@ -135,7 +129,6 @@
             bottom: 0;
             right: 0;
             transition: transform 0.2s, opacity 0.3s;
-            /* Animasi float aktif saat tidak didrag dan chat tertutup */
             animation: float 3s ease-in-out infinite;
         }
 
@@ -143,7 +136,6 @@
             transform: scale(1.1);
         }
 
-        /* Sembunyikan tombol robot saat chat terbuka */
         .chibi-robot-btn.hidden-btn {
             opacity: 0;
             pointer-events: none;
@@ -168,28 +160,24 @@
             box-shadow: 0 0 0 #0369a1, 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* Input Area Fix for Mobile Keyboard */
         .input-area {
-            /* Memastikan input tidak tertutup keyboard (tergantung browser) */
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Media Queries untuk Perangkat Kecil (Mobile) */
+        /* Media Queries Mobile */
         @media (max-width: 480px) {
             #chat-window {
                 width: calc(100vw - 20px);
                 max-width: none;
-                height: calc(100vh - 100px); /* Beri sedikit ruang agar tidak full mentok */
+                height: calc(100vh - 100px); 
                 max-height: none;
             }
             #draggable-container {
-                /* Reset posisi ke pojok saat mobile agar konsisten */
                 bottom: 10px !important; 
                 right: 10px !important;
                 left: auto !important;
                 top: auto !important;
             }
-            /* Matikan fitur drag di mobile (layar kecil) karena lebih baik statis */
             .chat-header {
                 cursor: default;
             }
@@ -199,17 +187,49 @@
 <body class="flex flex-col items-center justify-center">
 
     <!-- Latar Belakang / Landing Info -->
-    <div class="text-center p-6 w-full max-w-2xl px-4 z-10 pointer-events-none">
+    <div class="text-center p-6 w-full max-w-2xl px-4 z-10 pointer-events-none flex flex-col items-center">
         <h1 class="text-4xl md:text-5xl font-bold text-sky-800 mb-4 drop-shadow-md">Pabbura-AI</h1>
         <p class="text-lg md:text-xl text-sky-700 mb-8">Asisten Pengobatan & Kesehatan Virtual Anda.</p>
+        
         <div class="inline-block bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-inner pointer-events-auto">
             <p class="text-sm md:text-base text-sky-800 font-medium">Instruksi Penggunaan:</p>
             <ul class="text-sm text-sky-700 text-left list-disc list-inside mt-2 space-y-1">
                 <li>Klik tombol robot di kanan bawah untuk mulai.</li>
                 <li>Pilih model AI dari <i>dropdown</i> menu.</li>
-                <li>(Desktop) Anda bisa <b>menggeser (drag)</b> jendela chat dengan menahan bagian header (biru tua).</li>
+                <li>(Desktop) Anda bisa <b>menggeser (drag)</b> jendela chat dengan menahan header (biru tua).</li>
                 <li>Ketik keluhan medis atau pertanyaan kesehatan Anda.</li>
             </ul>
+        </div>
+
+        <!-- FOOTER CREATOR & LINKS -->
+        <div class="mt-8 pointer-events-auto bg-white/50 p-4 rounded-2xl backdrop-blur-md border border-white/60 shadow-sm flex flex-col items-center gap-3 w-64 md:w-72">
+            <p class="text-xs font-semibold text-sky-800">&copy; 2026 Dibuat oleh Indrayaza Z</p>
+            
+            <div class="w-full h-px bg-sky-300/50 my-1"></div> <!-- Garis Pembatas -->
+
+            <!-- Link GitHub / Indrakenzo -->
+            <div class="flex items-center gap-3 w-full justify-center">
+                <a href="https://github.com/Indrakenzo" target="_blank" rel="noopener noreferrer" class="text-gray-800 hover:scale-110 transition-transform" title="GitHub">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                </a>
+                <a href="https://indrayaza-z.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-sky-800 hover:text-sky-500 transition-colors">
+                    Indrakenzo
+                </a>
+            </div>
+            
+            <!-- Link Robot / Lex-AI -->
+            <div class="flex items-center gap-3 w-full justify-center">
+                <a href="https://lex-ai-teal.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-teal-600 hover:scale-110 transition-transform" title="Robot Lex-AI">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 10.5V9a3 3 0 0 0-3-3h-2V4a1 1 0 0 0-2 0v2H10V4a1 1 0 0 0-2 0v2H6a3 3 0 0 0-3 3v1.5a3.5 3.5 0 0 0 0 7V19a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-1.5a3.5 3.5 0 0 0 0-7zM7 13.5a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5zm10 0a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5zM8 18h8v2H8z"/>
+                    </svg>
+                </a>
+                <a href="https://lex-ai-teal.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-teal-700 hover:text-teal-500 transition-colors">
+                    Lex-AI
+                </a>
+            </div>
         </div>
     </div>
 
@@ -220,11 +240,11 @@
         <div id="chat-window" class="glass-3d relative mb-[70px] shadow-2xl">
             <!-- Header (Handle Drag) -->
             <div id="chat-header" class="chat-header bg-gradient-to-r from-sky-600 to-teal-500 p-3 md:p-4 text-white flex justify-between items-center rounded-t-2xl shadow-sm z-50">
-                <div class="flex items-center gap-2 pointer-events-none"> <!-- Nonaktifkan pointer pada isi header agar drag lancar -->
+                <div class="flex items-center gap-2 pointer-events-none">
                     <span class="text-xl md:text-2xl drop-shadow">🩺</span>
                     <h3 class="font-semibold text-sm md:text-lg drop-shadow">Pabbura-AI</h3>
                 </div>
-                <!-- Tombol Tutup (Perlu pointer-events-auto agar bisa diklik) -->
+                <!-- Tombol Tutup -->
                 <button onclick="toggleChat(event)" class="text-white hover:text-red-200 transition-colors text-2xl font-bold px-2 pointer-events-auto" title="Tutup">
                     &times;
                 </button>
@@ -262,11 +282,9 @@
             <!-- Area Chat History -->
             <div id="chat-history" class="flex-1 p-3 md:p-4 overflow-y-auto space-y-4 bg-white/40">
                 <div class="flex items-start gap-2">
-                    <!-- Avatar Bot -->
                     <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0">
                         🤖
                     </div>
-                    <!-- Bubble Pesan -->
                     <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-sky-100 max-w-[85%] text-gray-700 text-sm md:text-base leading-relaxed">
                         <p>Halo! Saya <b>Pabbura-AI</b>. Saya menggunakan daftar model gratis dari OpenRouter.</p>
                         <p class="mt-2">Ada keluhan kesehatan atau pertanyaan medis yang bisa saya bantu analisa hari ini?</p>
@@ -285,7 +303,6 @@
 
         <!-- Tombol Robot Chibi Floating (Trigger) -->
         <button id="robot-btn" onclick="toggleChat(event)" class="chibi-robot-btn" title="Buka Konsultasi Pabbura-AI">
-            <!-- SVG Robot Icon -->
             <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-sky-500">
                 <path d="M32 2C18.7 2 8 12.7 8 26v16c0 8.8 7.2 16 16 16h16c8.8 0 16-7.2 16-16V26C56 12.7 45.3 2 32 2zM22 24c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm20 0c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm-10 22c-6.6 0-12-4-12-9h24c0 5-5.4 9-12 9z" fill="currentColor"/>
                 <rect x="28" y="10" width="8" height="8" fill="#ff4d4f" rx="1"/>
@@ -306,26 +323,19 @@
         const inputEl = document.getElementById('user-input');
 
         // === UI INTERACTION FUNCTIONS ===
-
-        // Fungsi Buka/Tutup Chat
         function toggleChat(e) {
-            // Mencegah event bubbling ke parent draggable
             if(e) e.stopPropagation(); 
             
             const isActive = chatWindow.classList.contains('active');
             
             if (isActive) {
-                // Menutup Chat
                 chatWindow.classList.remove('active');
                 robotBtn.classList.remove('hidden-btn');
             } else {
-                // Membuka Chat
                 chatWindow.classList.add('active');
                 robotBtn.classList.add('hidden-btn');
-                // Scroll ke bawah
                 setTimeout(() => {
                     historyDiv.scrollTop = historyDiv.scrollHeight;
-                    // Fokus ke input hanya jika bukan di perangkat mobile (untuk menghindari keyboard otomatis muncul dan menutupi layar)
                     if(window.innerWidth > 768) {
                         inputEl.focus();
                     }
@@ -333,11 +343,9 @@
             }
         }
 
-        // Auto Resize Textarea
         function autoResizeTextarea(element) {
             element.style.height = 'auto';
             element.style.height = (element.scrollHeight) + 'px';
-            // Batasi tinggi maksimum
             if (element.scrollHeight > 100) {
                 element.style.height = '100px';
                 element.style.overflowY = 'auto';
@@ -346,10 +354,9 @@
             }
         }
 
-        // Handle Enter (tanpa Shift) untuk kirim
         function handleKeyPress(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Mencegah baris baru
+                event.preventDefault();
                 sendMessage();
             }
         }
@@ -363,21 +370,15 @@
         let xOffset = 0;
         let yOffset = 0;
 
-        // Inisialisasi event listener drag pada header (bukan seluruh container)
         chatHeader.addEventListener("mousedown", dragStart);
         chatHeader.addEventListener("touchstart", dragStart, { passive: false });
-
         document.addEventListener("mouseup", dragEnd);
         document.addEventListener("touchend", dragEnd);
-
         document.addEventListener("mousemove", drag);
         document.addEventListener("touchmove", drag, { passive: false });
 
         function dragStart(e) {
-            // Nonaktifkan drag jika lebar layar <= 480px (mobile)
             if (window.innerWidth <= 480) return;
-
-            // Jangan drag jika yang diklik adalah tombol close
             if (e.target.tagName.toLowerCase() === 'button') return;
 
             if (e.type === "touchstart") {
@@ -387,7 +388,6 @@
                 initialX = e.clientX - xOffset;
                 initialY = e.clientY - yOffset;
             }
-
             isDragging = true;
             container.classList.add('dragging');
         }
@@ -401,8 +401,7 @@
 
         function drag(e) {
             if (isDragging) {
-                e.preventDefault(); // Mencegah scrolling saat drag di touch device
-
+                e.preventDefault();
                 if (e.type === "touchmove") {
                     currentX = e.touches[0].clientX - initialX;
                     currentY = e.touches[0].clientY - initialY;
@@ -410,10 +409,8 @@
                     currentX = e.clientX - initialX;
                     currentY = e.clientY - initialY;
                 }
-
                 xOffset = currentX;
                 yOffset = currentY;
-
                 setTranslate(currentX, currentY, container);
             }
         }
@@ -422,21 +419,16 @@
             el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
         }
 
-        // Handle Window Resize (Reset posisi jika kembali ke ukuran mobile)
         window.addEventListener('resize', () => {
             if (window.innerWidth <= 480) {
-                // Reset transform
                 xOffset = 0;
                 yOffset = 0;
                 container.style.transform = 'none';
             }
         });
 
-
         // === CHAT LOGIC ===
-
         function formatMessageContent(text) {
-            // Sederhana: ubah baris baru menjadi <br>
             return text.replace(/\n/g, '<br>');
         }
 
@@ -454,22 +446,14 @@
             } else {
                 msgDiv.className = 'flex items-start gap-2 w-full';
                 msgDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0 mt-1">
-                        🤖
-                    </div>
+                    <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0 mt-1">🤖</div>
                     <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-sky-100 max-w-[85%] text-gray-700 text-sm md:text-base leading-relaxed break-words">
                         <p>${formattedContent}</p>
                     </div>
                 `;
             }
-            
             historyDiv.appendChild(msgDiv);
-            
-            // Animasi scroll halus
-            historyDiv.scrollTo({
-                top: historyDiv.scrollHeight,
-                behavior: 'smooth'
-            });
+            historyDiv.scrollTo({ top: historyDiv.scrollHeight, behavior: 'smooth' });
         }
 
         async function sendMessage() {
@@ -478,14 +462,12 @@
             
             if (!message) return;
 
-            // Reset input height
             inputEl.value = '';
             inputEl.style.height = 'auto';
 
             appendMessage('user', message);
             chatHistory.push({ role: 'user', content: message });
 
-            // Menambahkan indikator loading (typing)
             const loadingId = 'loading-' + Date.now();
             const loadingDiv = document.createElement('div');
             loadingDiv.id = loadingId;
@@ -502,7 +484,6 @@
             historyDiv.scrollTo({ top: historyDiv.scrollHeight, behavior: 'smooth' });
 
             try {
-                // Call backend api/chat.js
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -512,7 +493,6 @@
                     })
                 });
 
-                // Hapus loading
                 document.getElementById(loadingId)?.remove();
 
                 if (!response.ok) {
@@ -533,7 +513,6 @@
                 }
             } catch (error) {
                 document.getElementById(loadingId)?.remove();
-                console.error("Fetch Error:", error);
                 appendMessage('assistant', `⚠️ Koneksi gagal. Error: ${error.message}. Pastikan model tersedia atau periksa koneksi internet Anda.`);
             }
         }
