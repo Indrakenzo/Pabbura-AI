@@ -1,0 +1,12 @@
+{
+  "name": "pabbura-ai",
+  "version": "1.0.0",
+  "description": "Asisten Pengobatan & Kesehatan Virtual (Pabbura-AI)",
+  "scripts": {
+    "start": "node api/chat.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
