@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pabbura-AI | Asisten Kesehatan Virtual</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* 3D Glassy Container */
+        .glass-3d {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2), 
+                        inset 0 2px 0 rgba(255, 255, 255, 0.8);
+        }
+        /* Floating Animation for Chibi Robot */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .chibi-robot {
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
+            transition: transform 0.2s;
+        }
+        .chibi-robot:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+        /* Chat Window (Hidden by default) */
+        #chat-window {
+            transition: all 0.3s ease;
+            transform-origin: bottom right;
+            transform: scale(0);
+            opacity: 0;
+        }
+        #chat-window.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        /* 3D Button */
+        .btn-3d {
+            background: linear-gradient(to bottom, #38bdf8, #0284c7);
+            box-shadow: 0 4px 0 #0369a1, 0 5px 10px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #0369a1, 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="relative h-full w-full flex items-center justify-center">
+
+    <!-- Latar Belakang / Landing Info -->
+    <div class="text-center p-6 max-w-2xl">
+        <h1 class="text-5xl font-bold text-sky-800 mb-4 drop-shadow-md">Pabbura-AI</h1>
+        <p class="text-xl text-sky-700 mb-8">Asisten Pengobatan & Kesehatan Virtual Anda.</p>
+        <p class="text-sm text-sky-600 bg-white/50 p-4 rounded-xl shadow-inner">Klik robot medis di sudut kanan bawah untuk mulai berkonsultasi.</p>
+    </div>
+
+    <!-- Chat Interface Pop-up -->
+    <div id="chat-window" class="glass-3d absolute bottom-24 right-6 w-[90%] max-w-[400px] h-[550px] max-h-[80vh] flex flex-col z-40 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-sky-500 to-teal-400 p-4 text-white flex justify-between items-center shadow-md">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🩺</span>
+                <h3 class="font-semibold text-lg">Konsultasi Pabbura-AI</h3>
+            </div>
+            <button onclick="toggleChat()" class="text-white hover:text-gray-200 text-xl font-bold">&times;</button>
+        </div>
+
+        <!-- Model Selector -->
+        <div class="p-2 bg-sky-50 border-b border-sky-100">
+            <select id="model-select" class="w-full p-2 text-sm rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
+                <option value="openrouter/free">openrouter/free</option>
+                <option value="nvidia/nemotron-3.5-lightning:free">nvidia/nemotron-3.5-lightning:free</option>
+                <option value="poolside/laguna-s-2.1:free">poolside/laguna-s-2.1:free</option>
+                <option value="dots-studio/dots-3-note-preview:free">dots-studio/dots-3-note-preview:free</option>
+                <option value="nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
+                <option value="apodex/apodex-1.1-mini:free">apodex/apodex-1.1-mini:free</option>
+                <option value="thinkingmachines/inkling:free">thinkingmachines/inkling:free</option>
+                <option value="cohere/north-mini-code:free">cohere/north-mini-code:free</option>
+                <option value="thinkingmachines/inkling-small:free">thinkingmachines/inkling-small:free</option>
+                <option value="poolside/laguna-xs-2.1:free">poolside/laguna-xs-2.1:free</option>
+                <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free">nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free</option>
+                <option value="inception/mercury-decide:free">inception/mercury-decide:free</option>
+                <option value="liquid/lfm-2.5-2.6b:free">liquid/lfm-2.5-2.6b:free</option>
+                <option value="nvidia/llama-nemotron-rerank-vl-1b-v2:free">nvidia/llama-nemotron-rerank-vl-1b-v2:free</option>
+                <option value="nvidia/nemotron-3.5-content-safety:free">nvidia/nemotron-3.5-content-safety:free</option>
+                <option value="nvidia/nemotron-3-embed-1b:free">nvidia/nemotron-3-embed-1b:free</option>
+                <option value="google/gemma-4-26b-a4b-it:free">google/gemma-4-26b-a4b-it:free</option>
+                <option value="nvidia/llama-nemotron-embed-vl-1b-v2:free">nvidia/llama-nemotron-embed-vl-1b-v2:free</option>
+                <option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free</option>
+                <option value="respan/span-01-lite:free">respan/span-01-lite:free</option>
+                <option value="liquid/lfm-2.5-embedding-350m:free">liquid/lfm-2.5-embedding-350m:free</option>
+                <option value="fish-audio/s2.1-pro-free:free">fish-audio/s2.1-pro-free:free</option>
+            </select>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-4 bg-white/50">
+            <div class="flex items-start gap-2">
+                <div class="bg-white p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl shadow-sm border border-sky-100 max-w-[80%]">
+                    <p class="text-sm text-gray-700">Halo! Saya Pabbura-AI. Ada keluhan kesehatan yang bisa saya bantu analisa hari ini?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 bg-white border-t border-sky-100 flex gap-2">
+            <input type="text" id="user-input" class="flex-1 border border-sky-200 rounded-xl p-3 focus:outline-none focus:border-sky-500 bg-sky-50 text-sm" placeholder="Ketik keluhan Anda di sini..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" class="btn-3d text-white px-5 rounded-xl font-semibold flex items-center justify-center">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Chibi Medical Robot -->
+    <div onclick="toggleChat()" class="chibi-robot absolute bottom-6 right-6 z-50 bg-white rounded-full p-3 border-4 border-sky-300 shadow-xl flex items-center justify-center w-16 h-16">
+        <!-- SVG Robot Icon -->
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-full h-full text-sky-500">
+            <path d="M32 2C18.7 2 8 12.7 8 26v16c0 8.8 7.2 16 16 16h16c8.8 0 16-7.2 16-16V26C56 12.7 45.3 2 32 2zM22 24c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm20 0c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm-10 22c-6.6 0-12-4-12-9h24c0 5-5.4 9-12 9z" fill="currentColor"/>
+            <rect x="28" y="10" width="8" height="8" fill="#ff4d4f" rx="1"/>
+            <rect x="24" y="12" width="16" height="4" fill="#ff4d4f" rx="1"/>
+        </svg>
+    </div>
+
+    <script>
+        let chatHistory = [];
+
+        function toggleChat() {
+            const chatWindow = document.getElementById('chat-window');
+            chatWindow.classList.toggle('active');
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function appendMessage(role, content) {
+            const historyDiv = document.getElementById('chat-history');
+            const msgDiv = document.createElement('div');
+            
+            if (role === 'user') {
+                msgDiv.className = 'flex items-start gap-2 justify-end';
+                msgDiv.innerHTML = `
+                    <div class="bg-sky-500 text-white p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl shadow-sm max-w-[80%]">
+                        <p class="text-sm">${content}</p>
+                    </div>
+                `;
+            } else {
+                msgDiv.className = 'flex items-start gap-2';
+                msgDiv.innerHTML = `
+                    <div class="bg-white p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl shadow-sm border border-sky-100 max-w-[80%]">
+                        <p class="text-sm text-gray-700">${content}</p>
+                    </div>
+                `;
+            }
+            
+            historyDiv.appendChild(msgDiv);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('user-input');
+            const message = inputEl.value.trim();
+            const modelSelect = document.getElementById('model-select').value;
+            
+            if (!message) return;
+
+            appendMessage('user', message);
+            chatHistory.push({ role: 'user', content: message });
+            inputEl.value = '';
+
+            // Add loading indicator
+            const historyDiv = document.getElementById('chat-history');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-indicator';
+            loadingDiv.className = 'flex items-start gap-2';
+            loadingDiv.innerHTML = `<div class="bg-white p-3 rounded-xl border border-sky-100 text-sm text-gray-400 italic">Pabbura-AI sedang menganalisa...</div>`;
+            historyDiv.appendChild(loadingDiv);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: modelSelect,
+                        messages: chatHistory
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('loading-indicator').remove();
+
+                if (data.error) {
+                    appendMessage('assistant', 'Maaf, terjadi kesalahan sistem: ' + data.error);
+                } else if (data.choices && data.choices.length > 0) {
+                    const reply = data.choices[0].message.content;
+                    appendMessage('assistant', reply);
+                    chatHistory.push({ role: 'assistant', content: reply });
+                } else {
+                    appendMessage('assistant', 'Maaf, tidak ada respons dari model.');
+                }
+            } catch (error) {
+                document.getElementById('loading-indicator').remove();
+                appendMessage('assistant', 'Koneksi terputus. Silakan periksa jaringan Anda.');
+            }
+        }
+    </script>
+</body>
+</html>
