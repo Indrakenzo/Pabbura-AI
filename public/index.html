@@ -2,54 +2,162 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pabbura-AI | Asisten Kesehatan Virtual</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
             margin: 0;
             height: 100vh;
-            overflow: hidden;
+            width: 100vw;
+            overflow: hidden; /* Mencegah scrolling pada background */
+            position: relative;
         }
+
         /* 3D Glassy Container */
         .glass-3d {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.5);
             box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2), 
                         inset 0 2px 0 rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
         }
-        /* Floating Animation for Chibi Robot */
+
+        /* Wrapper Container yang bisa didrag */
+        #draggable-container {
+            position: absolute;
+            /* Posisi awal di kanan bawah, menyesuaikan ukuran layar */
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+            /* Transisi hanya aktif saat tidak didrag agar halus saat buka/tutup */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Saat sedang didrag, matikan transisi posisi agar responsif */
+        #draggable-container.dragging {
+            transition: none;
+        }
+
+        /* Chat Window - Menyesuaikan ukuran berdasarkan perangkat */
+        #chat-window {
+            /* Default untuk mobile */
+            width: calc(100vw - 40px);
+            height: calc(100vh - 120px); 
+            max-width: 400px;
+            max-height: 600px;
+            /* Animasi buka tutup */
+            transform-origin: bottom right;
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none; /* Nonaktifkan interaksi saat tertutup */
+            display: none; /* Sembunyikan sepenuhnya dari DOM agar tidak mengganggu layout */
+        }
+
+        #chat-window.active {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+            display: flex; /* Tampilkan sebagai flexbox */
+        }
+
+        /* Header Chat - Area utama untuk mendrag (handle) */
+        .chat-header {
+            cursor: grab;
+            touch-action: none; /* Mencegah default touch behavior saat drag */
+            user-select: none; /* Mencegah teks terseleksi saat drag */
+        }
+        
+        .chat-header:active {
+            cursor: grabbing;
+        }
+
+        /* Area Model Selector - Pastikan bisa diklik */
+        #model-selector-area {
+            position: relative; /* Penting untuk z-index dropdown */
+            z-index: 60;
+        }
+
+        select#model-select {
+            cursor: pointer;
+            /* Styling agar terlihat jelas */
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230284c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px top 50%;
+            background-size: 10px auto;
+            padding-right: 30px;
+        }
+
+        /* Custom Scrollbar untuk Chat History */
+        #chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-history::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+        #chat-history::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.3);
+            border-radius: 10px;
+        }
+        #chat-history::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.6);
+        }
+
+        /* Floating Chibi Robot Button (Trigger Utama) */
+        .chibi-robot-btn {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 50%;
+            border: 4px solid #7dd3fc; /* sky-300 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            transition: transform 0.2s, opacity 0.3s;
+            /* Animasi float aktif saat tidak didrag dan chat tertutup */
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .chibi-robot-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Sembunyikan tombol robot saat chat terbuka */
+        .chibi-robot-btn.hidden-btn {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
+            animation: none;
+        }
+
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
         }
-        .chibi-robot {
-            animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.2));
-            transition: transform 0.2s;
-        }
-        .chibi-robot:hover {
-            transform: scale(1.1);
-            cursor: pointer;
-        }
-        /* Chat Window (Hidden by default) */
-        #chat-window {
-            transition: all 0.3s ease;
-            transform-origin: bottom right;
-            transform: scale(0);
-            opacity: 0;
-        }
-        #chat-window.active {
-            transform: scale(1);
-            opacity: 1;
-        }
-        /* 3D Button */
+
+        /* 3D Button Style for Send */
         .btn-3d {
             background: linear-gradient(to bottom, #38bdf8, #0284c7);
             box-shadow: 0 4px 0 #0369a1, 0 5px 10px rgba(0,0,0,0.2);
@@ -59,143 +167,342 @@
             transform: translateY(4px);
             box-shadow: 0 0 0 #0369a1, 0 2px 5px rgba(0,0,0,0.2);
         }
+
+        /* Input Area Fix for Mobile Keyboard */
+        .input-area {
+            /* Memastikan input tidak tertutup keyboard (tergantung browser) */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Media Queries untuk Perangkat Kecil (Mobile) */
+        @media (max-width: 480px) {
+            #chat-window {
+                width: calc(100vw - 20px);
+                max-width: none;
+                height: calc(100vh - 100px); /* Beri sedikit ruang agar tidak full mentok */
+                max-height: none;
+            }
+            #draggable-container {
+                /* Reset posisi ke pojok saat mobile agar konsisten */
+                bottom: 10px !important; 
+                right: 10px !important;
+                left: auto !important;
+                top: auto !important;
+            }
+            /* Matikan fitur drag di mobile (layar kecil) karena lebih baik statis */
+            .chat-header {
+                cursor: default;
+            }
+        }
     </style>
 </head>
-<body class="relative h-full w-full flex items-center justify-center">
+<body class="flex flex-col items-center justify-center">
 
     <!-- Latar Belakang / Landing Info -->
-    <div class="text-center p-6 max-w-2xl">
-        <h1 class="text-5xl font-bold text-sky-800 mb-4 drop-shadow-md">Pabbura-AI</h1>
-        <p class="text-xl text-sky-700 mb-8">Asisten Pengobatan & Kesehatan Virtual Anda.</p>
-        <p class="text-sm text-sky-600 bg-white/50 p-4 rounded-xl shadow-inner">Klik robot medis di sudut kanan bawah untuk mulai berkonsultasi.</p>
+    <div class="text-center p-6 w-full max-w-2xl px-4 z-10 pointer-events-none">
+        <h1 class="text-4xl md:text-5xl font-bold text-sky-800 mb-4 drop-shadow-md">Pabbura-AI</h1>
+        <p class="text-lg md:text-xl text-sky-700 mb-8">Asisten Pengobatan & Kesehatan Virtual Anda.</p>
+        <div class="inline-block bg-white/60 backdrop-blur-sm p-4 rounded-xl shadow-inner pointer-events-auto">
+            <p class="text-sm md:text-base text-sky-800 font-medium">Instruksi Penggunaan:</p>
+            <ul class="text-sm text-sky-700 text-left list-disc list-inside mt-2 space-y-1">
+                <li>Klik tombol robot di kanan bawah untuk mulai.</li>
+                <li>Pilih model AI dari <i>dropdown</i> menu.</li>
+                <li>(Desktop) Anda bisa <b>menggeser (drag)</b> jendela chat dengan menahan bagian header (biru tua).</li>
+                <li>Ketik keluhan medis atau pertanyaan kesehatan Anda.</li>
+            </ul>
+        </div>
     </div>
 
-    <!-- Chat Interface Pop-up -->
-    <div id="chat-window" class="glass-3d absolute bottom-24 right-6 w-[90%] max-w-[400px] h-[550px] max-h-[80vh] flex flex-col z-40 overflow-hidden">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-sky-500 to-teal-400 p-4 text-white flex justify-between items-center shadow-md">
-            <div class="flex items-center gap-2">
-                <span class="text-2xl">🩺</span>
-                <h3 class="font-semibold text-lg">Konsultasi Pabbura-AI</h3>
+    <!-- Container Utama yang Bisa Di-Drag -->
+    <div id="draggable-container">
+        
+        <!-- Chat Window -->
+        <div id="chat-window" class="glass-3d relative mb-[70px] shadow-2xl">
+            <!-- Header (Handle Drag) -->
+            <div id="chat-header" class="chat-header bg-gradient-to-r from-sky-600 to-teal-500 p-3 md:p-4 text-white flex justify-between items-center rounded-t-2xl shadow-sm z-50">
+                <div class="flex items-center gap-2 pointer-events-none"> <!-- Nonaktifkan pointer pada isi header agar drag lancar -->
+                    <span class="text-xl md:text-2xl drop-shadow">🩺</span>
+                    <h3 class="font-semibold text-sm md:text-lg drop-shadow">Pabbura-AI</h3>
+                </div>
+                <!-- Tombol Tutup (Perlu pointer-events-auto agar bisa diklik) -->
+                <button onclick="toggleChat(event)" class="text-white hover:text-red-200 transition-colors text-2xl font-bold px-2 pointer-events-auto" title="Tutup">
+                    &times;
+                </button>
             </div>
-            <button onclick="toggleChat()" class="text-white hover:text-gray-200 text-xl font-bold">&times;</button>
-        </div>
 
-        <!-- Model Selector -->
-        <div class="p-2 bg-sky-50 border-b border-sky-100">
-            <select id="model-select" class="w-full p-2 text-sm rounded-lg border border-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                <option value="openrouter/free">openrouter/free</option>
-                <option value="nvidia/nemotron-3.5-lightning:free">nvidia/nemotron-3.5-lightning:free</option>
-                <option value="poolside/laguna-s-2.1:free">poolside/laguna-s-2.1:free</option>
-                <option value="dots-studio/dots-3-note-preview:free">dots-studio/dots-3-note-preview:free</option>
-                <option value="nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
-                <option value="apodex/apodex-1.1-mini:free">apodex/apodex-1.1-mini:free</option>
-                <option value="thinkingmachines/inkling:free">thinkingmachines/inkling:free</option>
-                <option value="cohere/north-mini-code:free">cohere/north-mini-code:free</option>
-                <option value="thinkingmachines/inkling-small:free">thinkingmachines/inkling-small:free</option>
-                <option value="poolside/laguna-xs-2.1:free">poolside/laguna-xs-2.1:free</option>
-                <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free">nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free</option>
-                <option value="inception/mercury-decide:free">inception/mercury-decide:free</option>
-                <option value="liquid/lfm-2.5-2.6b:free">liquid/lfm-2.5-2.6b:free</option>
-                <option value="nvidia/llama-nemotron-rerank-vl-1b-v2:free">nvidia/llama-nemotron-rerank-vl-1b-v2:free</option>
-                <option value="nvidia/nemotron-3.5-content-safety:free">nvidia/nemotron-3.5-content-safety:free</option>
-                <option value="nvidia/nemotron-3-embed-1b:free">nvidia/nemotron-3-embed-1b:free</option>
-                <option value="google/gemma-4-26b-a4b-it:free">google/gemma-4-26b-a4b-it:free</option>
-                <option value="nvidia/llama-nemotron-embed-vl-1b-v2:free">nvidia/llama-nemotron-embed-vl-1b-v2:free</option>
-                <option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free</option>
-                <option value="respan/span-01-lite:free">respan/span-01-lite:free</option>
-                <option value="liquid/lfm-2.5-embedding-350m:free">liquid/lfm-2.5-embedding-350m:free</option>
-                <option value="fish-audio/s2.1-pro-free:free">fish-audio/s2.1-pro-free:free</option>
-            </select>
-        </div>
+            <!-- Area Pilihan Model -->
+            <div id="model-selector-area" class="p-2 md:p-3 bg-sky-50 border-b border-sky-200 shadow-sm">
+                <label for="model-select" class="block text-xs font-semibold text-sky-800 mb-1">Pilih Model AI:</label>
+                <select id="model-select" class="w-full p-2 text-sm text-sky-900 rounded-lg border-2 border-sky-300 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 bg-white shadow-inner font-medium transition-colors">
+                    <option value="openrouter/free" selected>OpenRouter Free (Default)</option>
+                    <option value="nvidia/nemotron-3.5-lightning:free">Nvidia Nemotron 3.5 Lightning</option>
+                    <option value="poolside/laguna-s-2.1:free">Poolside Laguna S 2.1</option>
+                    <option value="dots-studio/dots-3-note-preview:free">Dots Studio 3 Note Preview</option>
+                    <option value="nvidia/nemotron-3-super-120b-a12b:free">Nvidia Nemotron 3 Super 120B</option>
+                    <option value="apodex/apodex-1.1-mini:free">Apodex 1.1 Mini</option>
+                    <option value="thinkingmachines/inkling:free">Thinking Machines Inkling</option>
+                    <option value="cohere/north-mini-code:free">Cohere North Mini Code</option>
+                    <option value="thinkingmachines/inkling-small:free">Thinking Machines Inkling Small</option>
+                    <option value="poolside/laguna-xs-2.1:free">Poolside Laguna XS 2.1</option>
+                    <option value="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free">Nvidia Nemotron 3 Nano Reasoning</option>
+                    <option value="inception/mercury-decide:free">Inception Mercury Decide</option>
+                    <option value="liquid/lfm-2.5-2.6b:free">Liquid LFM 2.5</option>
+                    <option value="nvidia/llama-nemotron-rerank-vl-1b-v2:free">Nvidia Llama Nemotron Rerank</option>
+                    <option value="nvidia/nemotron-3.5-content-safety:free">Nvidia Nemotron Content Safety</option>
+                    <option value="nvidia/nemotron-3-embed-1b:free">Nvidia Nemotron Embed</option>
+                    <option value="google/gemma-4-26b-a4b-it:free">Google Gemma 4 (26B)</option>
+                    <option value="nvidia/llama-nemotron-embed-vl-1b-v2:free">Nvidia Llama Nemotron Embed</option>
+                    <option value="google/gemma-4-31b-it:free">Google Gemma 4 (31B)</option>
+                    <option value="respan/span-01-lite:free">Respan Span 01 Lite</option>
+                    <option value="liquid/lfm-2.5-embedding-350m:free">Liquid LFM Embedding</option>
+                    <option value="fish-audio/s2.1-pro-free:free">Fish Audio S2.1 Pro</option>
+                </select>
+            </div>
 
-        <!-- Chat History -->
-        <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-4 bg-white/50">
-            <div class="flex items-start gap-2">
-                <div class="bg-white p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl shadow-sm border border-sky-100 max-w-[80%]">
-                    <p class="text-sm text-gray-700">Halo! Saya Pabbura-AI. Ada keluhan kesehatan yang bisa saya bantu analisa hari ini?</p>
+            <!-- Area Chat History -->
+            <div id="chat-history" class="flex-1 p-3 md:p-4 overflow-y-auto space-y-4 bg-white/40">
+                <div class="flex items-start gap-2">
+                    <!-- Avatar Bot -->
+                    <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                        🤖
+                    </div>
+                    <!-- Bubble Pesan -->
+                    <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-sky-100 max-w-[85%] text-gray-700 text-sm md:text-base leading-relaxed">
+                        <p>Halo! Saya <b>Pabbura-AI</b>. Saya menggunakan daftar model gratis dari OpenRouter.</p>
+                        <p class="mt-2">Ada keluhan kesehatan atau pertanyaan medis yang bisa saya bantu analisa hari ini?</p>
+                    </div>
                 </div>
             </div>
+
+            <!-- Input Area -->
+            <div class="p-3 bg-white border-t border-sky-100 flex gap-2 rounded-b-20px input-area shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] rounded-b-2xl">
+                <textarea id="user-input" rows="1" class="flex-1 border border-sky-200 rounded-xl p-3 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-sky-50 text-sm md:text-base resize-none overflow-hidden" placeholder="Ketik keluhan di sini..." oninput="autoResizeTextarea(this)" onkeydown="handleKeyPress(event)"></textarea>
+                <button onclick="sendMessage()" class="btn-3d text-white px-4 md:px-5 rounded-xl font-bold flex items-center justify-center text-lg self-end h-[46px]" title="Kirim">
+                    ➤
+                </button>
+            </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="p-4 bg-white border-t border-sky-100 flex gap-2">
-            <input type="text" id="user-input" class="flex-1 border border-sky-200 rounded-xl p-3 focus:outline-none focus:border-sky-500 bg-sky-50 text-sm" placeholder="Ketik keluhan Anda di sini..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()" class="btn-3d text-white px-5 rounded-xl font-semibold flex items-center justify-center">
-                ➤
-            </button>
-        </div>
-    </div>
+        <!-- Tombol Robot Chibi Floating (Trigger) -->
+        <button id="robot-btn" onclick="toggleChat(event)" class="chibi-robot-btn" title="Buka Konsultasi Pabbura-AI">
+            <!-- SVG Robot Icon -->
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-sky-500">
+                <path d="M32 2C18.7 2 8 12.7 8 26v16c0 8.8 7.2 16 16 16h16c8.8 0 16-7.2 16-16V26C56 12.7 45.3 2 32 2zM22 24c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm20 0c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm-10 22c-6.6 0-12-4-12-9h24c0 5-5.4 9-12 9z" fill="currentColor"/>
+                <rect x="28" y="10" width="8" height="8" fill="#ff4d4f" rx="1"/>
+                <rect x="24" y="12" width="16" height="4" fill="#ff4d4f" rx="1"/>
+            </svg>
+        </button>
 
-    <!-- Floating Chibi Medical Robot -->
-    <div onclick="toggleChat()" class="chibi-robot absolute bottom-6 right-6 z-50 bg-white rounded-full p-3 border-4 border-sky-300 shadow-xl flex items-center justify-center w-16 h-16">
-        <!-- SVG Robot Icon -->
-        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="w-full h-full text-sky-500">
-            <path d="M32 2C18.7 2 8 12.7 8 26v16c0 8.8 7.2 16 16 16h16c8.8 0 16-7.2 16-16V26C56 12.7 45.3 2 32 2zM22 24c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm20 0c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm-10 22c-6.6 0-12-4-12-9h24c0 5-5.4 9-12 9z" fill="currentColor"/>
-            <rect x="28" y="10" width="8" height="8" fill="#ff4d4f" rx="1"/>
-            <rect x="24" y="12" width="16" height="4" fill="#ff4d4f" rx="1"/>
-        </svg>
     </div>
 
     <script>
+        // === STATE & DATA ===
         let chatHistory = [];
+        const container = document.getElementById('draggable-container');
+        const chatWindow = document.getElementById('chat-window');
+        const robotBtn = document.getElementById('robot-btn');
+        const chatHeader = document.getElementById('chat-header');
+        const historyDiv = document.getElementById('chat-history');
+        const inputEl = document.getElementById('user-input');
 
-        function toggleChat() {
-            const chatWindow = document.getElementById('chat-window');
-            chatWindow.classList.toggle('active');
+        // === UI INTERACTION FUNCTIONS ===
+
+        // Fungsi Buka/Tutup Chat
+        function toggleChat(e) {
+            // Mencegah event bubbling ke parent draggable
+            if(e) e.stopPropagation(); 
+            
+            const isActive = chatWindow.classList.contains('active');
+            
+            if (isActive) {
+                // Menutup Chat
+                chatWindow.classList.remove('active');
+                robotBtn.classList.remove('hidden-btn');
+            } else {
+                // Membuka Chat
+                chatWindow.classList.add('active');
+                robotBtn.classList.add('hidden-btn');
+                // Scroll ke bawah
+                setTimeout(() => {
+                    historyDiv.scrollTop = historyDiv.scrollHeight;
+                    // Fokus ke input hanya jika bukan di perangkat mobile (untuk menghindari keyboard otomatis muncul dan menutupi layar)
+                    if(window.innerWidth > 768) {
+                        inputEl.focus();
+                    }
+                }, 300);
+            }
         }
 
+        // Auto Resize Textarea
+        function autoResizeTextarea(element) {
+            element.style.height = 'auto';
+            element.style.height = (element.scrollHeight) + 'px';
+            // Batasi tinggi maksimum
+            if (element.scrollHeight > 100) {
+                element.style.height = '100px';
+                element.style.overflowY = 'auto';
+            } else {
+                element.style.overflowY = 'hidden';
+            }
+        }
+
+        // Handle Enter (tanpa Shift) untuk kirim
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Mencegah baris baru
                 sendMessage();
             }
         }
 
+        // === DRAG & DROP LOGIC (Mouse & Touch) ===
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Inisialisasi event listener drag pada header (bukan seluruh container)
+        chatHeader.addEventListener("mousedown", dragStart);
+        chatHeader.addEventListener("touchstart", dragStart, { passive: false });
+
+        document.addEventListener("mouseup", dragEnd);
+        document.addEventListener("touchend", dragEnd);
+
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("touchmove", drag, { passive: false });
+
+        function dragStart(e) {
+            // Nonaktifkan drag jika lebar layar <= 480px (mobile)
+            if (window.innerWidth <= 480) return;
+
+            // Jangan drag jika yang diklik adalah tombol close
+            if (e.target.tagName.toLowerCase() === 'button') return;
+
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+
+            isDragging = true;
+            container.classList.add('dragging');
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            container.classList.remove('dragging');
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault(); // Mencegah scrolling saat drag di touch device
+
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, container);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        // Handle Window Resize (Reset posisi jika kembali ke ukuran mobile)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 480) {
+                // Reset transform
+                xOffset = 0;
+                yOffset = 0;
+                container.style.transform = 'none';
+            }
+        });
+
+
+        // === CHAT LOGIC ===
+
+        function formatMessageContent(text) {
+            // Sederhana: ubah baris baru menjadi <br>
+            return text.replace(/\n/g, '<br>');
+        }
+
         function appendMessage(role, content) {
-            const historyDiv = document.getElementById('chat-history');
             const msgDiv = document.createElement('div');
+            const formattedContent = formatMessageContent(content);
             
             if (role === 'user') {
-                msgDiv.className = 'flex items-start gap-2 justify-end';
+                msgDiv.className = 'flex items-start gap-2 justify-end w-full';
                 msgDiv.innerHTML = `
-                    <div class="bg-sky-500 text-white p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl shadow-sm max-w-[80%]">
-                        <p class="text-sm">${content}</p>
+                    <div class="bg-gradient-to-br from-sky-500 to-sky-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-md max-w-[85%] text-sm md:text-base leading-relaxed break-words">
+                        <p>${formattedContent}</p>
                     </div>
                 `;
             } else {
-                msgDiv.className = 'flex items-start gap-2';
+                msgDiv.className = 'flex items-start gap-2 w-full';
                 msgDiv.innerHTML = `
-                    <div class="bg-white p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl shadow-sm border border-sky-100 max-w-[80%]">
-                        <p class="text-sm text-gray-700">${content}</p>
+                    <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0 mt-1">
+                        🤖
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-sky-100 max-w-[85%] text-gray-700 text-sm md:text-base leading-relaxed break-words">
+                        <p>${formattedContent}</p>
                     </div>
                 `;
             }
             
             historyDiv.appendChild(msgDiv);
-            historyDiv.scrollTop = historyDiv.scrollHeight;
+            
+            // Animasi scroll halus
+            historyDiv.scrollTo({
+                top: historyDiv.scrollHeight,
+                behavior: 'smooth'
+            });
         }
 
         async function sendMessage() {
-            const inputEl = document.getElementById('user-input');
             const message = inputEl.value.trim();
             const modelSelect = document.getElementById('model-select').value;
             
             if (!message) return;
 
+            // Reset input height
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+
             appendMessage('user', message);
             chatHistory.push({ role: 'user', content: message });
-            inputEl.value = '';
 
-            // Add loading indicator
-            const historyDiv = document.getElementById('chat-history');
+            // Menambahkan indikator loading (typing)
+            const loadingId = 'loading-' + Date.now();
             const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'loading-indicator';
-            loadingDiv.className = 'flex items-start gap-2';
-            loadingDiv.innerHTML = `<div class="bg-white p-3 rounded-xl border border-sky-100 text-sm text-gray-400 italic">Pabbura-AI sedang menganalisa...</div>`;
+            loadingDiv.id = loadingId;
+            loadingDiv.className = 'flex items-start gap-2 w-full';
+            loadingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-teal-100 border-2 border-teal-400 flex items-center justify-center text-sm shadow-sm flex-shrink-0">🤖</div>
+                <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-sky-100 flex items-center gap-1">
+                    <span class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                    <span class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                    <span class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+                </div>
+            `;
             historyDiv.appendChild(loadingDiv);
-            historyDiv.scrollTop = historyDiv.scrollHeight;
+            historyDiv.scrollTo({ top: historyDiv.scrollHeight, behavior: 'smooth' });
 
             try {
+                // Call backend api/chat.js
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -205,21 +512,29 @@
                     })
                 });
 
+                // Hapus loading
+                document.getElementById(loadingId)?.remove();
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
-                document.getElementById('loading-indicator').remove();
 
                 if (data.error) {
-                    appendMessage('assistant', 'Maaf, terjadi kesalahan sistem: ' + data.error);
+                    appendMessage('assistant', '⚠️ Maaf, terjadi kesalahan sistem: ' + data.error);
                 } else if (data.choices && data.choices.length > 0) {
                     const reply = data.choices[0].message.content;
                     appendMessage('assistant', reply);
                     chatHistory.push({ role: 'assistant', content: reply });
                 } else {
-                    appendMessage('assistant', 'Maaf, tidak ada respons dari model.');
+                    appendMessage('assistant', '⚠️ Maaf, tidak ada respons dari model. Silakan coba model lain.');
                 }
             } catch (error) {
-                document.getElementById('loading-indicator').remove();
-                appendMessage('assistant', 'Koneksi terputus. Silakan periksa jaringan Anda.');
+                document.getElementById(loadingId)?.remove();
+                console.error("Fetch Error:", error);
+                appendMessage('assistant', `⚠️ Koneksi gagal. Error: ${error.message}. Pastikan model tersedia atau periksa koneksi internet Anda.`);
             }
         }
     </script>
